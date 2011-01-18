@@ -1,0 +1,204 @@
+===================
+ 8x8 Font Notes
+===================
+
+Use output.gba in new new/normatt with stats.sna
+
+Plan:
+ - current routine just maps tiles from font
+ - keep a blank tile, map everything to this initially
+ - when printing a string just allocate one tile at a time
+
+
+============
+Font loading
+============
+
+6008000 - VRAM where entire small font is copied to
+
+font is loaded when start menu is entered, not each individual menu
+
+812FBB6 - font is decompressed
+ - 87FD000 lz77uncomp to 6007000
+
+font.gba is 7FD000 dumped
+ 1000 to 2BFF is font
+
+
+6001022
+
+8144E40 - stores tile no to map
+ call 813599C
+ 3000850, copies this to bg2 (6001000)
+
+3000850: 0x1E - width of screen
+3000854: 0x14 - height of screen
+3000860: where it starts copying from
+
+3000850 stored at 811E4C6, copied from 852E483
+ in call 811E3CE
+
+breakpoint at 8135994, eventually calls 811E3CE
+ some sort of decompression routine?
+ around 811E474, its checking control flags?
+ - 07 for example = 03+1=04, it skips this many bytes backwards
+  - copies a sequence of bytes (00 in this case
+  - 07 is also argument for next copy thing??
+ - 3000860 (map data) starts being copied at 852E48A in control data
+ - it looks like every few bytes is a control byte, several bits of which control the next stuff
+  - example, 852E48C = FD (11111101) -> 3F (111111)
+  - this routine is at 811E404
+  - ands control byte with 03, so two bits each
+ - options:
+  - 0: 811E436, takes 2 control bytes
+   - sort of like little endian word, but masks off all but 3 digits
+   - adds 5 to this number
+   - copies a sequence of bytes, but a further distance away than 01
+  - 1: 811E474, copies a sequence of bytes from already placed bytes
+   - more details
+   - ex: 21
+    - ands with r9 (3) and + 1, so far 02
+     - this is how many bytes back to copy from
+    - 21 >>2 = 08 + 2 = 0A, which is how many bytes to remove from total
+     - 08 + 1 is how many to copy? (it actually copies 0x0A bytes)
+  - 2: 811E4C4, copies 1 byte
+  - 3: 811E4A8, copies 3 bytes
+ - r6 is keeping track of something, zerod at 811E408
+  - number of control flags used
+ - r7 is total length of compressed stream?
+
+after this routine stats screen is setup but blank, (just bg2)
+ so titles of the screen are hardcoded
+ they need to be translated anyway, somehow make them actual text and just use vwf routine?
+
+compression routine seems to be independent of just that screen (good!)
+stats screen: 813598C
+
+60010A6, first character of string
+ stored at 8136A20
+ loading string from 809D3AAish??
+ was called at 8136780 <- this only prints the habitat string (zokusei)
+
+string print routine 813698C
+ - before hand several values pushed on the stack, coords?
+ - r0 = address of string? (r0 vals:)
+  = 809D5D0 (for first few strings) (before first string i looked at prints?)
+  = 809DDD0
+  = 809D3A0 - zokusei string
+  = 809D3E0 - seikaku string
+ - r0 seems to be string base addr or some pointer?
+ for zokusei, stack vals: 4,2 (AND 1F), 0E
+ at 81369C4 it has tile address (calcs based on coords?)
+ at 81369EC adds r8 = offset from base, r4 = current character?
+  809D3A8 = zokusei string
+  r8 calculated at 81369DE based on r7*r6
+   r7 = passed r1 val<<>>0x18, r6 = first stack val<<>>0x18
+ orrs in palette value, then compares char to F0
+  - if F0 set char to 00 (space?)
+ adds 200 then orrs in palette value again (a lot of redundant code?)
+ it intermediately stores stuff in a ram spot
+ its loading the char val from [sp] somehow at 8136A08
+  - sp = r3 for some reason? why?
+ 
+ first stack value is length of the string
+  actually length of all strings in that block, used as length and for calculating address
+
+
+first string printed: 81366B6
+ setup 813668E
+ 813669A = get r1, r1 is string?
+
+next at 81366B6 again (must be move printing routine)
+
+first string is tsume (claw) 809D758 (string # 31)
+second is fireball (string #2) at 809D5E0
+then ???? (string #0 at 809D5D0
+ string base 809D5D0 for all
+
+then uses string base 809DD50 at 8136718 to print attack types
+ 809DD50 = normal (4 chars) string 0
+ 809DD58 = fire (3 chars?) string 2
+ 809DD98 = ???? (4) string 12
+
+8136756 = start of printing after attacks?
+ 809D3A8 - grassland (4 char)
+ 809D3E0 - carefree (4)
+ 809D4B8 - takedama forest (8)
+ 809E1A8 something on bg3
+ two more bg3 strings
+
+
+possible issues:
+- free vram is unreachable without ajusting BG vram base, which may not be feasible
+ - using font instead
+- 3000000 isnt being reset, should start on 1 to avoid using space
+ - fixed
+- other menus use font, like basic stats in main menu
+ - possible fix, just dont overwrite numbers?
+
+todo:
+- fix number priting routine
+- replace bg
+ - decompress/recompresser
+- other part of stats screen
+ - status strings
+ - equipped item
+ - name and type of friend
+ - the bg obviously
+- other menus
+
+fixing numbers:
+
+60013CA - number in vram
+ written 8144E40
+ in call 8144E1C at 813599C
+  this is background decompression, padding zeros are part of background
+  note: dashes before attack types also part of bg, add in fix routine?
+ written at 8136B54 (looks like same number routine for other screen)
+  call 8136B14 at 81365BA
+   prints a number, r0 = number
+   this routine only called once? the rest use 81358FC
+81358FC
+ [sp]	2BD = address of zero
+ [sp+4]	0 = ???
+ r0     number to print
+ r1	x
+ r2	y
+ r3	palette
+
+ sp+4: 813592A loads 0105 if not zero, 0205 if zero
+	it uses the 01 or the 02 to determine tilemap address
+	so which map to use bg1 or bg2?
+
+ calls starting at 813594A seem to print digits
+  calls 81DD820 then 81DD898, after 2nd one it prints digit (even zeros?)
+  - just hook this printing part for vwf?
+
+fixing numbers issues:
+- need to hook vwf
+ - maybe hook end of 81DD898 call
+  - two possible returns in this call, but only a few possible digits
+  - i guess just hook after each call?
+   - actually perfect, just dont do add r4,2 to not increment tile
+- when to reset overflow/tile
+- how/when to print slashes?
+- what changes need to be made to vwf routine
+ - the other function adds 200 after vwf is called, this doesnt
+ - different return register
+  - solution: instead of doing two routines
+    - put main code in routine, start/end code that call that routine
+    - tilemap registers are different
+     - since it modifies the stack, just push each to the stack in the same place
+       in the start/end code
+ - numbers are printed before any text (even text i added)
+  - move overflow/tilecount initializing code or move printTitles to before the     numbers are printed
+
+
+to work on:
+- turning number routine into vwf using above notes
+- make more effecient title printing routine
+ - store passed vals by string and do a routine that just loads them one by one
+ - from a pointer table so atlas can use
+  - make it work with atlas
+- decompress/recompress backgrounds
+- expand attacks, etc and translate them

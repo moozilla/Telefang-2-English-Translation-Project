@@ -1,0 +1,73 @@
+normatt's notes
+===============
+
+081c5b18 is where the oam data for the sprites used to draw the text are stored.
+
+small battle font is loaded directly into vram from 086A264C (4bpp)
+
+small menu font is loaded into vram from 0852e9e4 (compressed?) (decompressed by the routine at 0811E39C).
+
+
+battle notes
+============
+
+text written to BG0, using tiles from Tiles 1
+bottom chunk of Tiles 1 seems free for hwf/vwf
+
+
+
+http://datacrystal.romhacking.net/wiki/Keitai_Denjuu_Telefang_2:TBL
+
+
+main battle menu
+================
+
+tatakau = fight
+teki = enemy
+nigeru = run
+
+fight text at 600231A
+set at 81034C4
+
+text disp loop at 81034AE
+
+r9 = text base
+r3 = current character
+r7 = string offset?
+r5 = current map address
+r6 = str length
+
+r0 = r9 + r3 + r7 = character to load
+
+routine was called at 8112032 (called 810345C)
+8112096 for RUN str
+
+810345C:
+
+810347E - r2 and r3 are some form of x,y
+8103486 - calculation of map address
+81034A0 - mul 0x64 * 4 to get string offset
+ - 4 comes from stack at 8103468 (str width?)
+ - r6 is string id, comes from r1 when sub is called
+
+tatakau str at 809C420
+
+width of str is used in calculating pointer...
+811202A, r5 will be something, but stack value is width
+r5 is pushed on the stack, but not used
+stack value is in r0->r4, back to r0 at 8103498
+r4 is used to get string pointer
+r0 is put in r6 and used to compare width
+after routine r5 is restored from original pushed val
+ where it is reused for next string
+
+str base = 809C290 loaded from 809CD40
+
+
+text window in battle
+=====================
+
+7000048
+7000010
+
+window graphics DMAd at 81276E2

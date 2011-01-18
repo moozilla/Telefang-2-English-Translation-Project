@@ -1,0 +1,120 @@
+==========================
+ Keitai Denjuu Telefang 2
+      Power Version
+==========================
+
+Game Title - TELEFANG2POW
+Game Code  - ATPJ
+Maker      - Smilesoft (2N)
+CRC        - 34
+
+===================
+ Progress/Todo
+===================
+
+Near Todo:
+ - Dump script (smartly this time)
+
+Progress:
+
+(6/29/07)
+ - Initial lookthrough
+ - Made table for dialog text
+ - Found pointer table and how pointers work
+
+Everything that needs to be translated:
+ - Intro graphics
+ - Title screen
+ - File load screen
+ - Name entry
+ - Game script
+ - Popup idle menu thing
+ - Start menu
+ - Battles (expand menus)
+ - Probably more
+
+General Notes:
+- There is a lot of blank space
+
+===================
+ Text Notes
+===================
+
+General Notes:
+- No kanji in dialog
+- Pointers are 4-byte direct pointers
+
+Locations of Interest:
+ 0A9497 - First string in intro
+ 0C1350 - Pointer table
+ 6AB774
+
+Control codes:
+ F1 = end box
+ F2 = linebreak
+ F5 = variable, F500 = name
+ FA = blue text
+ FB = red text
+
+===================
+ Graphics Notes
+===================
+
+General Notes:
+- There are copies of the font in different colors
+  - this can probably be taken advantage of for space
+
+Locations of Interest:
+ 54FD58 - Font (16x16)
+ 68CE34 - Item graphics
+ 6919D4 - Assorted things including text
+ 6A2974 - Small font (8x8)
+ 6AB87C - Another font (16x16)
+ 72B204 - Copy of small font (?)
+ 740C78 - Dialog font (16x16)
+
+Palettes:
+ 000000 - Location
+
+===================
+ Special Thanks
+===================
+
+Kanji Identification
+-
+
+===================
+ Other Notes
+===================
+
+8129FB4 loads string from pointer table
+812A052 loads a character from ROM
+812A8EC is routine that loads a character graphic
+
+3005108 is current text location
+300511C is character being displayed
+3005110 seems free, will use for vwf pixel offset
+
+812A230 does math to alter where in tiles it copies to
+812A268 increments current char pos
+812A33C sets char pos to 0x0 (start of box)
+812A12C sets char pos to 0x10 (newline)
+
+; new notes 6:31 AM 12/31/2010
+
+812A068 is char increment in Speed
+
+300510C = current char in speed
+2FF0000 = using for vwf overflow
+
+8129F26
+812A0A0
+
+Red letters use a different routine (not DMA)
+
+VWF Todo:
+- Second part of overflow >_<
+- Load width from width table
+
+Things to fix:
+- Red routine
