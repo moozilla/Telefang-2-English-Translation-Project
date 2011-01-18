@@ -3,8 +3,8 @@
 #VAR(engTable, TABLE)
 
 // Load and activate the table
-#ADDTBL("telefang.tbl", Table)
-#ADDTBL("dos-dialogue.tbl", engTable)
+#ADDTBL("script/telefang.tbl", Table)
+#ADDTBL("script/dos-dialogue.tbl", engTable)
 #ACTIVETBL(Table)
 
 // Setup GBA pointers and Pointer Table
