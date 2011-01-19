@@ -57,17 +57,48 @@ here:
 .pool
 
 .org 0x8136B52
-    ldr r6, =printNum4+1
+    ldr r6, =printNum3+1
     bx r6
 .pool
 
 .org 0x8136B14
-    push r4-r7,r14      ; change this to push r7 as well so printNum3 can be reused
+    push r4-r7,r14      ; change this to push r7 as well so printNumEnd can be reused
 .org 0x8136B1A
     ldr r5,[sp,0x14]    ; add 4 to each of these to compensate for r7
     ldr r0,[sp,0x18]
 
 .org 0x8136B60
+    ldr r6, =printNumEnd+1
+    bx r6
+.pool
+
+.org 0x8136BB2
+    ldr r6, =printNum4+1
+    bx r6
+.pool
+
+.org 0x8136BCC
+    ldr r6, =printNum5+1
+    bx r6
+.pool
+
+.org 0x8136BE4
+    ldr r6, =printNum6+1
+    bx r6
+.pool
+
+.org 0x8136BFC
+    ldr r6, =printNum7+1
+    bx r6
+.pool
+
+.org 0x8136B6C
+    push r4-r7,r14      ; change this to push r7 as well so printNumEnd can be reused
+.org 0x8136B72
+    ldr r5,[sp,0x14]    ; add 4 to each of these to compensate for r7
+    ;ldr r0,[sp,0x18]
+    
+.org 0x8136C0A
     ldr r6, =printNumEnd+1
     bx r6
 .pool
@@ -81,34 +112,76 @@ here:
 printNum1:
     ; r0 is the digit to print
     bl printNum
-    mov lr,r1
+    ;mov lr,r1 - not sure why this was needed at one point, fixed bug I hope
     
     ldr r1, [printNum1_returnAddr]
     bx r1
     
 printNum2:
     bl printNum
-    mov lr,r1
     
     ldr r1, [printNum2_returnAddr]
     bx r1
     
-; routine for 2 digit number printing, I'm sure all these printNums can be combined somehow
-printNum4:
+; routine for 2 digit number printing
+printNum3:
     bl printNum
-    mov lr,r1
     
     ; overwritten code
     ;mov r0,r7     ; in printNum
     mov r1,#0x0A   ; this DOESNT happen on return
     
+    ldr r3, [printNum3_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+; routines for 5 digit number printing
+printNum4:
+    bl printNum
+    
+    ; overwritten code
+    ;mov r0,r7  happens  in printNum, but its overwritten
+    mov r1,#0xFA
+    lsl r1,r1,2
+    
     ldr r3, [printNum4_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+printNum5:
+    bl printNum
+    
+    ; overwritten code
+    ;mov r0,r7  happens  in printNum, but its overwritten
+    mov r0,r6
+    mov r1,#0x64
+    
+    ldr r3, [printNum5_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+printNum6:
+    bl printNum
+    
+    ; overwritten code
+    ;mov r0,r7  happens  in printNum, but its overwritten
+    mov r0,r6
+    mov r1,#0x0A
+    
+    ldr r3, [printNum6_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+printNum7:
+    bl printNum
+    
+    ; overwritten code
+    ;mov r0,r7  happens  in printNum, but its overwritten
+    mov r0,r6
+    mov r1,#0x0A
+    
+    ldr r3, [printNum7_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
     bx r3
     
 ; print last char and return, used in two places
 printNumEnd:
     bl printNum
-    ;mov lr,r1  ; irrelevant
     
     ; end of string - reset overflow
     ldrb r4,[r2]    ; r2 = 3000000
@@ -127,9 +200,9 @@ printNum:
     add r1,r0,r1
     mov r0,#8       ; stack offset
     push lr
-    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    bl putChar
     
-    mov r0,#0xE2    ; overwritten code
+    mov r0,#0xE2    ; calculate attribute and store it
     lsl r0,r0,#8
     add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
     strh r1,[r4]    ; print tile, r4 = current vram
@@ -137,7 +210,7 @@ printNum:
     ; overwritten code
     mov r0,r7   ; doesnt happen in printNumEnd, but doesn't matter - it's overwritten
     pop r1      ; store lr in r1, since its free in all cases
-    mov pc,lr
+    bx r1;mov pc,lr
     
 printChar:
     push lr
@@ -234,7 +307,11 @@ putLoop:
 returnAddr: .word 0x08136A18+1   ;.word 0x81369FC+1
 printNum1_returnAddr: .word 0x8135960+1
 printNum2_returnAddr: .word 0x8135978+1
-printNum4_returnAddr: .word 0x8136B5C+1
+printNum3_returnAddr: .word 0x8136B5C+1
+printNum4_returnAddr: .word 0x8136BBC+1
+printNum5_returnAddr: .word 0x8136BD6+1
+printNum6_returnAddr: .word 0x8136BEE+1
+printNum7_returnAddr: .word 0x8136C06+1
 tileCount:  .word 0x03000000     ; surprisingly this WRAM is usable, 03000001 will be overflow
 freeVRAM:   .word 0x06008000     ; VRAM to load tiles into  (0x0600C000 is extra but wont work because bg base)
 .pool
