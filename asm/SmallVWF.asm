@@ -42,23 +42,23 @@ here:
     ;add r4,#2       ; increment tile
     ;mov r0,r7
     ;mov r1,#0x0A
-    ldr r6, =printNum1+1
-    bx r6
+    ldr r1, =printNum1+1        ; these all used to be r6, but some routines need r6, r1 is overwritten in printNum
+    bx r1
 .pool
 
 .org 0x8135970
-    ldr r6, =printNum2+1
-    bx r6
+    ldr r1, =printNum2+1
+    bx r1
 .pool
 
 .org 0x813597E
-    ldr r6, =printNumEnd+1
-    bx r6
+    ldr r1, =printNumEnd+1
+    bx r1
 .pool
 
 .org 0x8136B52
-    ldr r6, =printNum3+1
-    bx r6
+    ldr r1, =printNum3+1
+    bx r1
 .pool
 
 .org 0x8136B14
@@ -73,23 +73,23 @@ here:
 .pool
 
 .org 0x8136BB2
-    ldr r6, =printNum4+1
-    bx r6
+    ldr r1, =printNum4+1
+    bx r1
 .pool
 
 .org 0x8136BCC
-    ldr r6, =printNum5+1
-    bx r6
+    ldr r1, =printNum5+1
+    bx r1
 .pool
 
 .org 0x8136BE4
-    ldr r6, =printNum6+1
-    bx r6
+    ldr r1, =printNum6+1
+    bx r1
 .pool
 
 .org 0x8136BFC
-    ldr r6, =printNum7+1
-    bx r6
+    ldr r1, =printNum7+1
+    bx r1
 .pool
 
 .org 0x8136B6C
@@ -99,8 +99,8 @@ here:
     ;ldr r0,[sp,0x18]
     
 .org 0x8136C0A
-    ldr r6, =printNumEnd+1
-    bx r6
+    ldr r1, =printNumEnd+1
+    bx r1
 .pool
 
 ; =================
