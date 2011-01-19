@@ -52,7 +52,7 @@ here:
 .pool
 
 .org 0x813597E
-    ldr r6, =printNum3+1
+    ldr r6, =printNumEnd+1
     bx r6
 .pool
 
@@ -68,7 +68,7 @@ here:
     ldr r0,[sp,0x18]
 
 .org 0x8136B60
-    ldr r6, =printNum3+1
+    ldr r6, =printNumEnd+1
     bx r6
 .pool
 
@@ -80,56 +80,35 @@ here:
 .area 0x87f3c50 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
 printNum1:
     ; r0 is the digit to print
-    mov r1,0x60     ; zero character in font is 0x60
-    add r1,r0,r1
-    mov r0,#8       ; stack offset
-    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
-    
-    mov r0,#0xE2    ; overwritten code
-    lsl r0,r0,#8
-    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
-    strh r1,[r4]    ; print tile, r4 = current vram
-    
-    ; overwritten code
-    ;add r0,r6,r0    ; r0 = number, r6 = 0x12BD - attribute for "0" with the right palette
-    ;strh r0,[r4]    ; r4 = current vram address
-    ;add r4,#2       ; increment tile
-    mov r0,r7
-    ;mov r1,#0x0A   ; this happens on return
+    bl printNum
+    mov lr,r1
     
     ldr r1, [printNum1_returnAddr]
     bx r1
     
 printNum2:
-    ; r0 is the digit to print
-    mov r1,0x60     ; zero character in font is 0x60
-    add r1,r0,r1
-    mov r0,#8       ; stack offset
-    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
-    
-    mov r0,#0xE2    ; overwritten code
-    lsl r0,r0,#8
-    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
-    strh r1,[r4]    ; print tile, r4 = current vram
-    
-    ; overwritten code
-    mov r0,r7
-    ;mov r1,#0x0A   ; this happens on return
+    bl printNum
+    mov lr,r1
     
     ldr r1, [printNum2_returnAddr]
     bx r1
     
-printNum3:
-    ; r0 is the digit to print
-    mov r1,0x60     ; zero character in font is 0x60
-    add r1,r0,r1
-    mov r0,#8       ; stack offset
-    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+; routine for 2 digit number printing, I'm sure all these printNums can be combined somehow
+printNum4:
+    bl printNum
+    mov lr,r1
     
-    mov r0,#0xE2    ; overwritten code
-    lsl r0,r0,#8
-    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
-    strh r1,[r4]    ; print tile, r4 = current vram
+    ; overwritten code
+    ;mov r0,r7     ; in printNum
+    mov r1,#0x0A   ; this DOESNT happen on return
+    
+    ldr r3, [printNum4_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+; print last char and return, used in two places
+printNumEnd:
+    bl printNum
+    ;mov lr,r1  ; irrelevant
     
     ; end of string - reset overflow
     ldrb r4,[r2]    ; r2 = 3000000
@@ -143,11 +122,11 @@ printNum3:
     pop r0
     bx r0   ; return from original routine
     
-; routines for 2 digit number printing, I'm sure all these printNums can be combined somehow
-printNum4:
+printNum:
     mov r1,0x60     ; zero character in font is 0x60
     add r1,r0,r1
     mov r0,#8       ; stack offset
+    push lr
     bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
     
     mov r0,#0xE2    ; overwritten code
@@ -156,11 +135,9 @@ printNum4:
     strh r1,[r4]    ; print tile, r4 = current vram
     
     ; overwritten code
-    mov r0,r7
-    mov r1,#0x0A   ; this DOESNT happen on return
-    
-    ldr r3, [printNum4_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
-    bx r3
+    mov r0,r7   ; doesnt happen in printNumEnd, but doesn't matter - it's overwritten
+    pop r1      ; store lr in r1, since its free in all cases
+    mov pc,lr
     
 printChar:
     push lr
