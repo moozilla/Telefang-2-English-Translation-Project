@@ -43,7 +43,7 @@ here:
 ;    bl 0x813698C
 
 ; This routine will print the previous hardcoded menu titles
-.org 0x87f3c00  ; may get overwritten if too much more is added to SmallVWF
+.org 0x87f3c10  ; may get overwritten if too much more is added to SmallVWF
 printTitles:
     mov r3,#3
     lsl r3,r3,#0x18         ; set r3 to 0x03000000 (tile counter in vwf)
