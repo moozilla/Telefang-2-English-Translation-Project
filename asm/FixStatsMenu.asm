@@ -14,7 +14,7 @@ here:
 	.endif
 .endmacro
 
-; translate some strings - do this differently later
+; translate some strings - move these to ATLAS, these are in the script
 .org 0x809D758
     .byte 0x22, 0x0C, 0x01, 0x17    ; Claw
 .org 0x809D5E0
@@ -34,7 +34,11 @@ here:
 .org 0x809D4B8
     .byte 0x33, 0x01, 0x0B, 0x05, 0x04, 0x01, 0x0D, 0x01 ; Takedama = Takedama Forest
     
-.org 0x8136680
+; =================
+;  Jump to routine
+; =================
+    
+.org 0x8135E52;0x8136680
     ldr r1, =printTitles+1
     bx r1
 .pool
@@ -42,8 +46,12 @@ here:
 ;.org 0x8136A38  ; this is free because of SmallVWF
 ;    bl 0x813698C
 
-; This routine will print the previous hardcoded menu titles
-.org 0x87f3c10  ; may get overwritten if too much more is added to SmallVWF
+; ============================================
+;  Print menu titles and setup vwf RAM values
+; ============================================
+
+; This routine will print the previously hardcoded menu titles
+.org 0x87f3c10  ; may get overwritten if too much more is added to SmallVWF - armips should warn because of .area
 printTitles:
     mov r3,#3
     lsl r3,r3,#0x18         ; set r3 to 0x03000000 (tile counter in vwf)
@@ -270,13 +278,19 @@ printTitles:
     
     pop r0-r7
 
-    ldrh r0,[r0]            ; original code
-    str r6,[sp]
-    mov r1,r9
-    mov r2,#0x12
+    ;ldrh r0,[r0]            ; original code
+    ;str r6,[sp]
+    ;mov r1,r9
+    ;mov r2,#0x12
+    
+    mov r1,0x80
+    lsl r1,r1,0x13
+    mov r4,0xA3
+    lsl r4,r4,5
+    mov r0,r4
 
-    ldr r3, [returnAddr]    ; r0 overwritten upon return
-    bx r3
+    ldr r2, [returnAddr]    ; r2 overwritten upon return
+    bx r2
     
 printStr:   
     mov r6,lr               ; r6 is saved
@@ -288,7 +302,7 @@ callReturn:
     mov pc,r6
     
 .align 4
-returnAddr: .word 0x08136688+1
+returnAddr: .word 0x08135E5C+1    ; 0x08136688+1
 .pool
 string1:
     .byte 0x33, 0x19, 0x10, 0x05, 0xF0, 0xF0, 0xF0, 0xF0 ; Type (spaces for trash)
@@ -313,7 +327,7 @@ stringA:
 string2_1:
     .byte 0x32, 0x14, 0x01, 0x14, 0x15, 0x13    ; Status
 string2_2:
-    .byte 0x24, 0x11, 0x15, 0x09, 0x10, 0x10, 0x05, 0x04, 0xF0, 0x28, 0x14, 0x04, 0x0D ; Equipped Item
+    .byte 0x24, 0x11, 0x15, 0x09, 0x10, 0x10, 0x05, 0x04, 0xF0, 0x28, 0x14, 0x05, 0x0D ; Equipped Item
 string2_3:
     .byte 0x25, 0x12, 0x09, 0x05, 0x0E, 0x04    ; Friend
 string2_4:
