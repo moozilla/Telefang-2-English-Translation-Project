@@ -193,6 +193,12 @@ fixing numbers issues:
  - numbers are printed before any text (even text i added)
   - move overflow/tilecount initializing code or move printTitles to before the     numbers are printed
 
+new issues:
+- Lv and Ex seem to use a different routine
+- fixing numbers on main menu
+- 8135E46 is where backgrounds are copied
+ - 8135E52 is first place to hook in menu title printing
+
 
 to work on:
 - turning number routine into vwf using above notes
