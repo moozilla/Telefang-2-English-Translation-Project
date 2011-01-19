@@ -14,8 +14,12 @@ here:
 	.endif
 .endmacro
 
+; =======================
+;  Jumps and other fixes
+; =======================
+
 .org 0x8136A0E ; routine that puts a character to the map
-    ldr r2, =putChar+1    ; r2 is best variable to use for jump
+    ldr r2, =printChar+1    ; r2 is best variable to use for jump
     bx r2
     
 .pool
@@ -27,16 +31,129 @@ here:
     ldr r3, =endString+1
     bx r3
 .pool
+
+; =============================
+;  Jumps and fixes for numbers
+; =============================
+
+.org 0x8135958 ; prints first digit in a number
+    ;add r0,r6,r0    ; r0 = number, r6 = 0x12BD - attribute for "0" with the right palette
+    ;strh r0,[r4]    ; r4 = current vram address
+    ;add r4,#2       ; increment tile
+    ;mov r0,r7
+    ;mov r1,#0x0A
+    ldr r6, =printNum1+1
+    bx r6
+.pool
+
+.org 0x8135970
+    ldr r6, =printNum2+1
+    bx r6
+.pool
+
+.org 0x813597E
+    ldr r6, =printNum3+1
+    bx r6
+.pool
+
+; =================
+;  Actual VWF code
+; =================
     
 .org 0x87f3b00 ; should be free space to put code (might change if other VWF routine is extended)
+.area 0x87f3c10 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
+printNum1:
+    ; r0 is the digit to print
+    mov r1,0x60     ; zero character in font is 0x60
+    add r1,r0,r1
+    mov r0,#8       ; stack offset
+    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    
+    mov r0,#0xE2    ; overwritten code
+    lsl r0,r0,#8
+    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
+    strh r1,[r4]    ; print tile, r4 = current vram
+    
+    ; overwritten code
+    ;add r0,r6,r0    ; r0 = number, r6 = 0x12BD - attribute for "0" with the right palette
+    ;strh r0,[r4]    ; r4 = current vram address
+    ;add r4,#2       ; increment tile
+    mov r0,r7
+    ;mov r1,#0x0A   ; this happens on return
+    
+    ldr r1, [printNum1_returnAddr]
+    bx r1
+    
+printNum2:
+    ; r0 is the digit to print
+    mov r1,0x60     ; zero character in font is 0x60
+    add r1,r0,r1
+    mov r0,#8       ; stack offset
+    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    
+    mov r0,#0xE2    ; overwritten code
+    lsl r0,r0,#8
+    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
+    strh r1,[r4]    ; print tile, r4 = current vram
+    
+    ; overwritten code
+    mov r0,r7
+    ;mov r1,#0x0A   ; this happens on return
+    
+    ldr r1, [printNum2_returnAddr]
+    bx r1
+    
+printNum3:
+    ; r0 is the digit to print
+    mov r1,0x60     ; zero character in font is 0x60
+    add r1,r0,r1
+    mov r0,#8       ; stack offset
+    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    
+    mov r0,#0xE2    ; overwritten code
+    lsl r0,r0,#8
+    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
+    strh r1,[r4]    ; print tile, r4 = current vram
+    
+    ; end of string - reset overflow
+    ldrb r4,[r2]    ; r2 = 3000000
+    add r4,r4,#1
+    strb r4,[r2]
+    mov r4, #0
+    strb r4,[r2,#1]
+    
+    ; overwritten code
+    pop r4-r7
+    pop r0
+    bx r0   ; return from original routine
+    
+printChar:
+    push lr
+    mov r0, #0x0C       ; stack offset
+    bl putChar
+
+    mov r0,#0x80    ; overwritten code
+    lsl r0,r0,#2
+    add r1,r1,r0    ; r1 = char value
+    and r1,r6       ; r1 = final tile value
+    ldrh r2,[r3]    ; r2 = last attrib value - used to get palette
+    
+    pop r0
+    mov lr,r0
+
+    ldr r0, [returnAddr]    ; r0 overwritten upon return
+    bx r0
+
 putChar:
     ; r1 is the character to be drawn
     ; this routine prints the character to vram and returns the correct tile
     ; the game stores the returned value in the proper place in the tilemap
 
+    ; r0 = stack offset for vram address, see note on hackyness in below code
 
     ldr r2,[tileCount]
     push r2-r7
+    mov r6,r0       ;save stack offset
     mov r3,r2
     ldr r2,=smallFont
     ldrb r4,[r3]    ; r4 = tile count
@@ -54,13 +171,16 @@ putChar:
     add r0,r7,r5
     cmp r0,#8
     ble NoOverflow  ; blt NoOverflow - this messed up when characters were 8 wide
-    mov r6,#8
-    sub r0,r0,r6
+    mov r5,#8
+    sub r0,r0,r5
     add r4,r4,#1    ; increment tile count
     strb r4,[r3]
-    ldr r4,[sp,#0x0c] ; increment tilemap address
+    ; ldrb r5,[r3,#3] ; stack offset - 0x08 for numbers, 0x0c for other menu, this is pretty hacky - change eventually
+    ; r6 shouldn't be changed
+    mov r5,sp
+    ldr r4,[r5,r6] ; increment tilemap address
     add r4,r4,#2
-    str r4,[sp,#0x0c]
+    str r4,[r5,r6]
 NoOverflow:
     strb r0,[r3,#1]
     
@@ -95,19 +215,13 @@ putLoop:
     ldrb r1,[r2]    ; r1 is tile number, original code will add 0x200
     ;add r1,r1,#1
     ;strb r1,[r3]    ; this will make it start on the second tile, so the background can use the space
-   
-   
-    mov r0,#0x80    ; overwritten code
-    lsl r0,r0,#2
-    add r1,r1,r0    ; r1 = char value
-    and r1,r6       ; r1 = final tile value
-    ldrh r2,[r3]    ; r2 = last attrib value - used to get palette
-
-    ldr r0, [returnAddr]    ; r0 overwritten upon return
-    bx r0
+    
+    mov pc,lr        ; return, pray that lr isn't used
     
 .align 4
 returnAddr: .word 0x08136A18+1   ;.word 0x81369FC+1
+printNum1_returnAddr: .word 0x8135960+1
+printNum2_returnAddr: .word 0x8135978+1
 tileCount:  .word 0x03000000     ; surprisingly this WRAM is usable, 03000001 will be overflow
 freeVRAM:   .word 0x06008000     ; VRAM to load tiles into  (0x0600C000 is extra but wont work because bg base)
 .pool
@@ -131,6 +245,7 @@ endString:
     pop r4-r7
     pop r0
     bx r0
+.endarea
 
 .org 0x87FE850 ; note this extends past the end of the rom, this will overwrite menu gfx if nofont version isnt used
 smallFont:
