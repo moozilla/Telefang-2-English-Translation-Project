@@ -56,12 +56,22 @@ here:
     bx r6
 .pool
 
+.org 0x8136B52
+    ldr r6, =printNum4+1
+    bx r6
+.pool
+
+.org 0x8136B60
+    ldr r6, =printNum5+1
+    bx r6
+.pool
+
 ; =================
 ;  Actual VWF code
 ; =================
     
 .org 0x87f3b00 ; should be free space to put code (might change if other VWF routine is extended)
-.area 0x87f3c10 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
+.area 0x87f3c50 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
 printNum1:
     ; r0 is the digit to print
     mov r1,0x60     ; zero character in font is 0x60
@@ -124,6 +134,49 @@ printNum3:
     
     ; overwritten code
     pop r4-r7
+    pop r0
+    bx r0   ; return from original routine
+    
+; routines for 2 digit number printing, I'm sure all these printNums can be combined somehow
+printNum4:
+    mov r1,0x60     ; zero character in font is 0x60
+    add r1,r0,r1
+    mov r0,#8       ; stack offset
+    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    
+    mov r0,#0xE2    ; overwritten code
+    lsl r0,r0,#8
+    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
+    strh r1,[r4]    ; print tile, r4 = current vram
+    
+    ; overwritten code
+    mov r0,r7
+    mov r1,#0x0A   ; this DOESNT happen on return
+    
+    ldr r3, [printNum4_returnAddr]  ; since r1 is set to 0A, r3 should always be overwritten in call after return
+    bx r3
+    
+printNum5: ; I'm sure this can be combined with printNum3 as well, only difference is pop r4-r6 instead of r4-r7
+    ; r0 is the digit to print
+    mov r1,0x60     ; zero character in font is 0x60
+    add r1,r0,r1
+    mov r0,#8       ; stack offset
+    bl putChar      ; pretty sure r2 isn't used before being overwritten, if not wrap this in push/pop
+    
+    mov r0,#0xE2    ; overwritten code
+    lsl r0,r0,#8
+    add r1,r1,r0    ; add 0xE200, 0xE000 = black palette, 0x200 = vram offset
+    strh r1,[r4]    ; print tile, r4 = current vram
+    
+    ; end of string - reset overflow
+    ldrb r4,[r2]    ; r2 = 3000000
+    add r4,r4,#1
+    strb r4,[r2]
+    mov r4, #0
+    strb r4,[r2,#1]
+    
+    ; overwritten code
+    pop r4-r6
     pop r0
     bx r0   ; return from original routine
     
@@ -222,6 +275,7 @@ putLoop:
 returnAddr: .word 0x08136A18+1   ;.word 0x81369FC+1
 printNum1_returnAddr: .word 0x8135960+1
 printNum2_returnAddr: .word 0x8135978+1
+printNum4_returnAddr: .word 0x8136B5A+1
 tileCount:  .word 0x03000000     ; surprisingly this WRAM is usable, 03000001 will be overflow
 freeVRAM:   .word 0x06008000     ; VRAM to load tiles into  (0x0600C000 is extra but wont work because bg base)
 .pool

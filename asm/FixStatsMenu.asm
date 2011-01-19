@@ -51,7 +51,7 @@ here:
 ; ============================================
 
 ; This routine will print the previously hardcoded menu titles
-.org 0x87f3c10  ; may get overwritten if too much more is added to SmallVWF - armips should warn because of .area
+.org 0x87f3c50  ; may get overwritten if too much more is added to SmallVWF - armips should warn because of .area
 printTitles:
     mov r3,#3
     lsl r3,r3,#0x18         ; set r3 to 0x03000000 (tile counter in vwf)
