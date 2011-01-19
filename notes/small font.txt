@@ -195,13 +195,20 @@ fixing numbers issues:
 
 new issues:
 - Lv and Ex seem to use a different routine
+ - Lv 2 digit routine at 8136B52
+ - Ex 5 digit at 8136BB2
 - fixing numbers on main menu
+ - numbers are printed now
+ - Lv number isnt long enough, need to print blanks or spaces to coverup garbage
+ - add slash to HP
 - 8135E46 is where backgrounds are copied
  - 8135E52 is first place to hook in menu title printing
 
 
 to work on:
-- turning number routine into vwf using above notes
+- add slashes to Hp and Exp
+- reposition numbers so it looks good
+- fix main menu screen (initialize number area)
 - make more effecient title printing routine
  - store passed vals by string and do a routine that just loads them one by one
  - from a pointer table so atlas can use
