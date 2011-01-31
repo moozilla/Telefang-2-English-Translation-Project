@@ -206,11 +206,8 @@ new issues:
 
 
 to work on:
-- add slashes to Hp and Exp
- - issue, Exp slash overwritten by one pixel
-  - prettiest solution: hack it to print xxx/xxx without ending string routine
-- reposition numbers so it looks good
- - done
+- possibly change numbers to be one pixel shorter
+- fix lvl 99 exp print (see below), test with 111 hp
 - fix main menu screen (initialize number area)
 - make more effecient title printing routine
  - store passed vals by string and do a routine that just loads them one by one
