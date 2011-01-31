@@ -108,7 +108,7 @@ here:
 ; =================
     
 .org 0x87f3b00 ; should be free space to put code (might change if other VWF routine is extended)
-.area 0x87f3c50 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
+.area 0x87f3c60 - 0x87f3b00 ; make sure this doesnt overflow into FixStatsMenu code
 printNum1:
     ; r0 is the digit to print
     bl printNum
@@ -183,7 +183,12 @@ printNum7:
 printNumEnd:
     bl printNum
     
-    ; end of string - reset overflow
+    ; check print slash flag (0x3000002 = 1 if printing a slash)
+    ldrb r1,[r2,2]
+    cmp r1,0
+    bne printSlash
+    
+    ; end of string - increment tile and reset overflow
     ldrb r4,[r2]    ; r2 = 3000000
     add r4,r4,#1
     strb r4,[r2]
@@ -191,6 +196,17 @@ printNumEnd:
     strb r4,[r2,#1]
     
     ; overwritten code
+    pop r4-r7
+    pop r0
+    bx r0   ; return from original routine
+    
+printSlash:
+    mov r1,0
+    strb r1,[r2,2]  ;reset flag
+    
+    mov r0,0x14     ; sort of hacky, 0x74 = slash, print num will add 60+14=74
+    bl printNum
+                    ; note: NOT resetting overflow
     pop r4-r7
     pop r0
     bx r0   ; return from original routine

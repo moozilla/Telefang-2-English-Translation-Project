@@ -207,7 +207,10 @@ new issues:
 
 to work on:
 - add slashes to Hp and Exp
+ - issue, Exp slash overwritten by one pixel
+  - prettiest solution: hack it to print xxx/xxx without ending string routine
 - reposition numbers so it looks good
+ - done
 - fix main menu screen (initialize number area)
 - make more effecient title printing routine
  - store passed vals by string and do a routine that just loads them one by one
@@ -221,11 +224,19 @@ changing position of numbers:
 call at: 81365BA
  r1 = x-pos, r2 = y-pos
 
+8136572 = attack, def, etc pos
+ prints stat bar as well as numbers
+ 8136A6A call seems to determine offset
+ 8136AA4 stores it on stack
+ actually, 8136ADE adds offset
+
 =======================
 will need to fix later!
 =======================
 
 routine at 813663E prints ----- if at Lv 99, not handled by vwf
+
+=======================
 
 
 some stat's menu graphics:

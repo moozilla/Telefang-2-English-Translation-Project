@@ -47,18 +47,22 @@ here:
 
 .org 0x81365B4  ;Lv
     mov r1, 4
-.org 0x81365D6  ;Hp
-    mov r1, 4
+;.org 0x81365D6  ;Hp    ; now done in setupSlash
+;    mov r1, 4
 .org 0x81365E6  ;Hp 2
-    mov r1, 7
+    mov r1, 6;7
 .org 0x81365F6  ;Dp
     mov r1, 4
-.org 0x8136614  ;Ex
-    mov r1, 4
-.org 0x813663E  ;Ex 2 (if Lv 99)
-    mov r1, 8
+;.org 0x8136614  ;Ex
+;    mov r1, 4
+.org 0x813663E  ;Ex 2 (if Lv 99) ---- fix this!
+    mov r1, 7
 .org 0x8136684  ;Ex 2
-    mov r1, 8
+    mov r1, 7
+.org 0x8136AE0  ;atk, def, etc
+    ; add r1,r7,7   ; instruction before this, 7 is max this opcode can do
+    add r1,r1,1     ; offset 1 tile
+    nop             ; this overwrites an lsl, asr combo, hopefully it wasnt needed
     
 ; =================
 ;  Jump to routine
@@ -66,6 +70,16 @@ here:
     
 .org 0x8135E52;0x8136680
     ldr r1, =printTitles+1
+    bx r1
+.pool
+
+.org 0x81365D0
+    ldr r1, =setupSlash+1
+    bx r1
+.pool
+
+.org 0x8136610
+    ldr r1, =setupSlash2+1
     bx r1
 .pool
 
@@ -77,7 +91,7 @@ here:
 ; ============================================
 
 ; This routine will print the previously hardcoded menu titles
-.org 0x87f3c50  ; may get overwritten if too much more is added to SmallVWF - armips should warn because of .area
+.org 0x87f3c60  ; may get overwritten if too much more is added to SmallVWF - armips should warn because of .area
 printTitles:
     mov r3,#3
     lsl r3,r3,#0x18         ; set r3 to 0x03000000 (tile counter in vwf)
@@ -242,6 +256,30 @@ printTitles:
     mov r3, #0x0D           ; y
     bl printStr
     
+;    ldr r0,=string_slash
+;    mov r1, #0              ; "/"
+;    mov r2, #1              ; length
+;    str r2, [sp]
+;    mov r2, #2              ; bg2
+;    str r2, [sp, #4]
+;    mov r2, #0x0E           ; palette
+;    str r2, [sp, #8]
+;    mov r2, #0x06           ; x
+;    mov r3, #0x10           ; y
+;    bl printStr
+    
+;    ldr r0,=string_slash
+;    mov r1, #0              ; "/"
+;    mov r2, #1              ; length
+;    str r2, [sp]
+;    mov r2, #2              ; bg2
+;    str r2, [sp, #4]
+;    mov r2, #0x0E           ; palette
+;    str r2, [sp, #8]
+;    mov r2, #0x07           ; x
+;    mov r3, #0x12           ; y
+;    bl printStr
+    
     ldr r0,=string2_1
     mov r1, #0              ; "Status"
     mov r2, #6              ; length
@@ -358,8 +396,49 @@ string2_3:
     .byte 0x25, 0x12, 0x09, 0x05, 0x0E, 0x04    ; Friend
 string2_4:
     .byte 0x2D, 0x01, 0x0D, 0x05    ; Name
+;string_slash:
+;    .byte 0x74
 ;string2_5:
     ; use string1 for Type
+    
+;======================
+; setup slash printing
+;======================
+.align 4
+setupSlash:
+    ldrb r0,[r5,4]  ;overwritten code
+    str r6,[sp]
+    str r4,[sp,4]
+    mov r1, 4
+    
+    ;set 0x3000002 to 1 - signal to print a slash instead of end string
+    ;r2 is already set to 0x3000000, might change?
+    ;mov r2,3
+    ;lsl r2,r2,#0x18 ;set r2 to 0x03000000
+    mov r3,1
+    strb r3,[r2,2]
+    
+    ldr r2, =0x81365D8+1
+    bx r2
+.pool
+
+setupSlash2:
+    ldrh r0,[r0,0x20]  ;overwritten code
+    str r6,[sp]
+    mov r1, 4
+    ;mov r2, 0x12      ;needs to be below to use r2
+    
+    ;set 0x3000002 to 1 - signal to print a slash instead of end string
+    ;r2 is already set to 0x3000000, might change?
+    ;mov r2,3
+    ;lsl r2,r2,#0x18 ;set r2 to 0x03000000
+    mov r3,1
+    strb r3,[r2,2]
+    
+    mov r2, 0x12
+    ldr r3, =0x8136618+1
+    bx r3
+.pool
     
 .close
 
