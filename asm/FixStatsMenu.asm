@@ -34,6 +34,32 @@ here:
 .org 0x809D4B8
     .byte 0x33, 0x01, 0x0B, 0x05, 0x04, 0x01, 0x0D, 0x01 ; Takedama = Takedama Forest
     
+; ==========
+;  Graphics
+; ==========
+
+.org 0x8690A8C
+.incbin graphics/stats-menu-nashi.bin
+    
+; ====================
+;  Reposition Numbers
+; ====================
+
+.org 0x81365B4  ;Lv
+    mov r1, 4
+.org 0x81365D6  ;Hp
+    mov r1, 4
+.org 0x81365E6  ;Hp 2
+    mov r1, 7
+.org 0x81365F6  ;Dp
+    mov r1, 4
+.org 0x8136614  ;Ex
+    mov r1, 4
+.org 0x813663E  ;Ex 2 (if Lv 99)
+    mov r1, 8
+.org 0x8136684  ;Ex 2
+    mov r1, 8
+    
 ; =================
 ;  Jump to routine
 ; =================

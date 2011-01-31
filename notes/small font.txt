@@ -215,3 +215,18 @@ to work on:
   - make it work with atlas
 - decompress/recompress backgrounds
 - expand attacks, etc and translate them
+
+changing position of numbers:
+
+call at: 81365BA
+ r1 = x-pos, r2 = y-pos
+
+=======================
+will need to fix later!
+=======================
+
+routine at 813663E prints ----- if at Lv 99, not handled by vwf
+
+
+some stat's menu graphics:
+8690A8C - "nashi" = none (for equipped item)
